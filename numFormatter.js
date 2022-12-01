@@ -1,5 +1,6 @@
 /**
  * 숫자 -> 한글 Formatter
+ * @version 1.0
  * @author twlee
  * @param origin {String | Number} 입력 숫자
  * @param type {String} 포맷 타입
