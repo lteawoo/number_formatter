@@ -1,0 +1,27 @@
+<html>
+
+<head>
+    <title>test</title>
+</head>
+
+<body>
+    <input id="numberInput" type="number"><span id="numberLabel"></span>
+    <br />
+    <input id="textInput" type="text"><span id="textLabel"></span>
+    <script type="text/javascript" src="numFormatter.js"></script>
+    <script>
+        const numberInput = document.getElementById('numberInput')
+        const textInput = document.getElementById('textInput')
+        const numberLabel = document.getElementById('numberLabel')
+        const textLabel = document.getElementById('textLabel')
+
+        numberInput.addEventListener('input', (e) => {
+            numberLabel.innerHTML = numFormatter(e.target.value)
+        })
+        textInput.addEventListener('input', (e) => {
+            textLabel.innerHTML = numFormatter(e.target.value)
+        })
+    </script>
+</body>
+
+</html>
