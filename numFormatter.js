@@ -1,13 +1,18 @@
 /**
  * 숫자 -> 한글 Formatter
- * @version 1.0
+ * @version 1.1
  * @author twlee
  * @param origin {String | Number} 입력 숫자
  * @param type {String} 포맷 타입
  * mix: 숫자-한글병기 (default)
+ * korean: 금융권 한글 (소수점 무시)
  * @returns {String}
  */
 const numFormatter = (origin, type) => {
+    const koreanNum = ['영', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구']
+    const digitSymbol = ['', '십', '백', '천']
+    const scaleSymbol = ['', '만', '억', '조', '경', '해']
+
     const util = {
         splitByDigits: (digits, arr) => {
             const result = []
@@ -33,7 +38,6 @@ const numFormatter = (origin, type) => {
     const formatter = function (value) {
         const origin = (value && value.length > 0) ? value : 0
 
-        const scaleSymbol = ['', '만 ', '억 ', '조 ', '경 ', '해 ']
         const divided = String(origin).split('.')
         const intPart = divided[0]
         const floatPart = divided[1]
@@ -41,20 +45,28 @@ const numFormatter = (origin, type) => {
         const chain = {}
         let result
 
-        chain.toToken = () => {
+        destruct = () => {
             result = pureNum.split('')
                 .reverse()
                 .map((n, index) => {
-                    const unitIndex = index % 4
-                    const dotIndex = Math.ceil(index / 4)
-                    const scale = unitIndex === 0 ? scaleSymbol[dotIndex] : ''
-                    return `${n}${scale}`
+                    const tokenIndex = index % 4
+                    const scaleIndex = Math.floor(index / 4)
+                    return {
+                        tokenIndex,
+                        scaleIndex,
+                        number: n,
+                        korean: koreanNum[n]
+                    }
                 })
             return chain
         }
 
-        chain.splitAndFormat = () => {
-            result = util.splitByDigits(4, result)
+        chain.splitAndMixFormat = () => {
+            const tmp = result.map((n) => {
+                const symbol = n.scaleIndex !== 0 ? `${scaleSymbol[n.scaleIndex]} ` : ''
+                return `${n.number}${n.tokenIndex === 0 ? symbol : ''}`
+            })
+            result = util.splitByDigits(4, tmp)
                 .map((n) => {
                     const r = util.trimZero(n)
 
@@ -69,14 +81,30 @@ const numFormatter = (origin, type) => {
             return chain
         }
 
+        chain.splitAndFormat = () => {
+            result = util.splitByDigits(4, result)
+                .reduce((acc, cur) => {
+                    return acc.concat(cur.reduce((acc, cur) => {
+                        if (parseInt(cur.number, 10) !== 0) {
+                            acc.push(`${cur.korean}${digitSymbol[cur.tokenIndex]}${cur.tokenIndex === 0 ? `${scaleSymbol[cur.scaleIndex]} ` : ''}`)
+                        } else if(cur.tokenIndex === 0 && cur.scaleIndex >= 1) {
+                            acc.push(`${scaleSymbol[cur.scaleIndex]} `)
+                        }
+                        return acc
+                    }, []))
+                }, [])
+                .reverse()
+            return chain
+        }
+
         chain.assemble = () => {
             result = result.join('').trim()
 
             if (parseInt(intPart, 10) < 0) {
                 result = `-${result}`
             }
-            if (floatPart) {
-                result = `${result}.${floatPart}`
+            if (floatPart && type !== 'korean') {
+                result = `${result}${floatPart}`
             }
 
             return chain
@@ -91,7 +119,14 @@ const numFormatter = (origin, type) => {
          * @returns {*}
          */
         this.numAndKorean = () => {
-            return chain.toToken()
+            return destruct()
+                .splitAndMixFormat()
+                .assemble()
+                .get()
+        }
+
+        this.korean = () => {
+            return destruct()
                 .splitAndFormat()
                 .assemble()
                 .get()
@@ -105,8 +140,10 @@ const numFormatter = (origin, type) => {
         return f.numAndKorean()
     }
 
-    // 순수 한글 (일억 삼천만 등 구현 필요시 구현 후 분기)
-    if (type === 'korean') { }
+    // 금융권 한글
+    if (type === 'korean') {
+        return f.korean()
+    }
 
     // default
     return f.numAndKorean()
