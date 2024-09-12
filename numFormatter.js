@@ -36,7 +36,7 @@ const numFormatter = (origin, type) => {
     }
 
     const formatter = function (value) {
-        const origin = (value && value.length > 0) ? value : 0
+        const origin = (value) ? value : 0
 
         const divided = String(origin).split('.')
         const intPart = divided[0]
@@ -116,7 +116,7 @@ const numFormatter = (origin, type) => {
         }
 
         chain.get = () => {
-            return result
+            return result ? result : 0
         }
 
         /**
