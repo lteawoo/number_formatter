@@ -45,7 +45,7 @@ const numFormatter = (origin, type) => {
         const chain = {}
         let result
 
-        destruct = () => {
+        const destruct = () => {
             result = pureNum.split('')
                 .reverse()
                 .map((n, index) => {
@@ -103,8 +103,13 @@ const numFormatter = (origin, type) => {
             if (parseInt(intPart, 10) < 0) {
                 result = `-${result}`
             }
-            if (floatPart && type !== 'korean') {
-                result = `${result}${floatPart}`
+            if (floatPart) {
+                if (type !== 'korean') {
+                    result = `${result}.${floatPart}`
+                } else {
+                    const t = floatPart.split('').map(n => koreanNum[n]).join('')
+                    result = `${result} 점 ${t}`
+                }
             }
 
             return chain
